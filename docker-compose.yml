@@ -1,0 +1,48 @@
+version: '3.3'
+
+services:
+  newspaper_nginx:
+    image: nginx
+    container_name: newspaper_nginx
+    restart: on-failure
+    working_dir: /var/www/newspaper
+    networks:
+      - newspaper_bridge
+    depends_on:
+      - newspaper_php
+    volumes:
+      - ./docker/nginx:/etc/nginx/conf.d
+      - ./:/var/www/newspaper
+    ports:
+      - "8182:80"
+  newspaper_php:
+    build: ./docker/php/
+    restart: on-failure
+    container_name: newspaper_php
+    depends_on:
+      - newspaper_postgres
+    working_dir: /var/www/newspaper
+    networks:
+      - newspaper_bridge
+    volumes:
+      - ./:/var/www/newspaper
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: newspaper
+      PHP_IDE_CONFIG: "serverName=Docker"
+  newspaper_postgres:
+    build: ./docker/postgres/
+    container_name: newspaper_postgres
+    restart: on-failure
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: newspaper
+    ports:
+      - "54322:5432"
+    networks:
+      - newspaper_bridge
+
+
+networks:
+  newspaper_bridge:
+    driver: bridge
